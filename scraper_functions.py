@@ -21,6 +21,23 @@ def get_wikipedia_links(artists):
 
         # Check if the search result is empty
         if len(search_result["query"]["search"]) == 0:
+            # Look in search suggestions
+            suggestion_url = f"https://en.wikipedia.org/w/api.php?action=opensearch&search={artist}&format=json"
+            suggestion_result = requests.get(suggestion_url).json()
+            if len(suggestion_result[1]) > 0:
+                # Use the first search suggestion
+                suggestion = suggestion_result[1][0]
+                search_url = f"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={suggestion}&format=json"
+                search_result = requests.get(search_url).json()
+                # Use the page title to get the page ID of the artist's Wikipedia page
+                page_title = search_result["query"]["search"][0]["title"]
+                page_id_url = f"https://en.wikipedia.org/w/api.php?action=query&titles={page_title}&prop=info&format=json"
+                page_id_result = requests.get(page_id_url).json()
+                page_id = list(page_id_result["query"]["pages"].keys())[0]
+                # Use the page ID to generate the link to the artist's Wikipedia page
+                wikipedia_link = f"https://en.wikipedia.org/wiki?curid={page_id}"
+                wikipedia_links[artist] = wikipedia_link
+
             artists_not_found.append(artist)
             continue
 
